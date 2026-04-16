@@ -1,0 +1,36 @@
+import { pgTable, text, serial, real, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const emissions = pgTable("emissions", {
+  id: serial("id").primaryKey(),
+  travelDistance: real("travel_distance").notNull(), // Daily travel distance in km
+  transportType: text("transport_type").notNull(), // car, bike, public_transport
+  electricityConsumption: real("electricity_consumption").notNull(), // Monthly electricity in kWh
+  dietType: text("diet_type").notNull(), // vegetarian, non_vegetarian, vegan
+  wasteGeneration: real("waste_generation").notNull(), // Weekly waste in kg
+  
+  // Calculated emissions (kg CO2 per year)
+  transportEmission: real("transport_emission").notNull(),
+  electricityEmission: real("electricity_emission").notNull(),
+  foodEmission: real("food_emission").notNull(),
+  wasteEmission: real("waste_emission").notNull(),
+  totalEmission: real("total_emission").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertEmissionSchema = createInsertSchema(emissions).pick({
+  travelDistance: true,
+  transportType: true,
+  electricityConsumption: true,
+  dietType: true,
+  wasteGeneration: true,
+});
+
+export type InsertEmission = z.infer<typeof insertEmissionSchema>;
+export type Emission = typeof emissions.$inferSelect;
+
+export type CreateEmissionRequest = InsertEmission;
+export type EmissionResponse = Emission;
+export type EmissionsListResponse = Emission[];
